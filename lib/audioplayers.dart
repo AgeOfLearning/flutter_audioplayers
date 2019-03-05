@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 typedef void TimeChangeHandler(Duration duration);
+typedef void BufferingHandler(int progress);
 typedef void ErrorHandler(String message);
 typedef void AudioPlayerStateChangeHandler(AudioPlayerState state);
 
@@ -64,6 +65,9 @@ class AudioPlayer {
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
 
+  final StreamController<int> _bufferingController =
+      new StreamController.broadcast();
+
 
   final StreamController<Duration> _durationController =
       new StreamController.broadcast();
@@ -105,6 +109,11 @@ class AudioPlayer {
   /// playback if the status is [AudioPlayerState.PLAYING].
   Stream<Duration> get onAudioPositionChanged => _positionController.stream;
 
+
+  /// Stream for subscribing to audio buffering updates.
+  Stream<int> get onBufferingChange => _bufferingController.stream;
+
+
   /// This handler returns the duration of the file, when it's available (it might take a while because it's being downloaded or buffered).
   Stream<Duration> get onDurationChanged => _durationController.stream;
 
@@ -114,6 +123,10 @@ class AudioPlayer {
   @deprecated
   /// This handler updates the current position of the audio. You can use it to make a progress bar, for instance.
   TimeChangeHandler positionHandler;
+
+  @deprecated
+  /// This handler updates the current buffering progress of the audio file (if it is remote)
+  BufferingHandler bufferingHandler;
 
   @deprecated
   AudioPlayerStateChangeHandler audioPlayerStateChangeHandler;
@@ -264,6 +277,12 @@ class AudioPlayer {
         player._positionController.add(newDuration);
         if (player.positionHandler != null) {
           player.positionHandler(newDuration);
+        }
+        break;
+      case 'audio.onBufferingUpdate':
+        player._bufferingController.add(value);
+        if (player.bufferingHandler != null) {
+          player.bufferingHandler(value);
         }
         break;
       case 'audio.onComplete':
