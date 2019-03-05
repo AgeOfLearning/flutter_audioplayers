@@ -127,6 +127,10 @@ public class AudioplayersPlugin implements MethodCallHandler {
         channel.invokeMethod("audio.onComplete", buildArguments(player.getPlayerId(), true));
     }
 
+    public void hanldeBufferingUpdate(Player player, int progress) {
+        channel.invokeMethod("audio.onBufferingUpdate", buildArguments(player.getPlayerId(), progress));
+    }
+
     private void startPositionUpdates() {
         if (positionUpdates != null) {
             return;
