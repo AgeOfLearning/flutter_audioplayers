@@ -192,7 +192,7 @@ FlutterMethodChannel *_channel_audioplayer;
       // players[playerId] = playerInfo;
 
       // stream player position
-      CMTime interval = CMTimeMakeWithSeconds(0.2, NSEC_PER_SEC);
+      CMTime interval = CMTimeMakeWithSeconds(0.05, NSEC_PER_SEC);
       id timeObserver = [ player  addPeriodicTimeObserverForInterval: interval queue: nil usingBlock:^(CMTime time){
         [self onTimeInterval:playerId time:time];
       }];
