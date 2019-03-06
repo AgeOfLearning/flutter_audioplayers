@@ -213,6 +213,10 @@ FlutterMethodChannel *_channel_audioplayer;
                           forKeyPath:@"player.currentItem.status"
                           options:0
                           context:(void*)playerId];
+      [playerItem addObserver:self
+                   forKeyPath:@"loadedTimeRanges"
+                      options:NSKeyValueObservingOptionNew
+                      context:(void*)playerId];
       
   } else {
     if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
@@ -270,6 +274,21 @@ FlutterMethodChannel *_channel_audioplayer;
     [_channel_audioplayer invokeMethod:@"audio.onDuration" arguments:@{@"playerId": playerId, @"value": @(mseconds)}];
   }
 }
+
+-(void) updateBuffering: (NSString *) playerId
+              timeRange:(CMTimeRange) timeRange
+{
+    NSMutableDictionary * playerInfo = players[playerId];
+    AVPlayer *player = playerInfo[@"player"];
+    
+    
+    
+    CMTime duration = [[[player currentItem]  asset] duration];
+    int progress = roundf((CMTimeGetSeconds(timeRange.duration) / CMTimeGetSeconds(duration) * 100));
+    NSLog(@"iod -> buffering %d", progress);
+    [_channel_audioplayer invokeMethod:@"audio.onBufferingUpdate" arguments:@{@"playerId": playerId, @"value": @(progress)}];
+}
+
 
 // No need to spam the logs with every time interval update
 -(void) onTimeInterval: (NSString *) playerId
@@ -349,25 +368,36 @@ FlutterMethodChannel *_channel_audioplayer;
                      ofObject:(id)object
                        change:(NSDictionary *)change
                       context:(void *)context {
-  if ([keyPath isEqualToString: @"player.currentItem.status"]) {
-    NSString *playerId = (__bridge NSString*)context;
-    NSMutableDictionary * playerInfo = players[playerId];
-    AVPlayer *player = playerInfo[@"player"];
-
-    NSLog(@"player status: %ld",(long)[[player currentItem] status ]);
-
-    // Do something with the status…
-    if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
-      [self updateDuration:playerId];
-
-      VoidCallback onReady = playerInfo[@"onReady"];
-      if (onReady != nil) {
-        [playerInfo removeObjectForKey:@"onReady"];  
-        onReady(playerId);
-      }
-    } else if ([[player currentItem] status ] == AVPlayerItemStatusFailed) {
-      [_channel_audioplayer invokeMethod:@"audio.onError" arguments:@{@"playerId": playerId, @"value": @"AVPlayerItemStatus.failed"}];
+    
+    //buffering
+    if([keyPath isEqualToString:@"loadedTimeRanges"]){
+        NSString *playerId = (__bridge NSString*)context;
+        NSArray *timeRanges = (NSArray*)[change objectForKey:NSKeyValueChangeNewKey];
+        if (timeRanges && [timeRanges count]) {
+            CMTimeRange timerange=[[timeRanges objectAtIndex:0]CMTimeRangeValue];
+            [self updateBuffering:playerId timeRange:timerange];
+        }
+        
     }
+    else if ([keyPath isEqualToString: @"player.currentItem.status"]) {
+        NSString *playerId = (__bridge NSString*)context;
+        NSMutableDictionary * playerInfo = players[playerId];
+        AVPlayer *player = playerInfo[@"player"];
+
+        NSLog(@"player status: %ld",(long)[[player currentItem] status ]);
+
+        // Do something with the status…
+        if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
+          [self updateDuration:playerId];
+
+          VoidCallback onReady = playerInfo[@"onReady"];
+          if (onReady != nil) {
+            [playerInfo removeObjectForKey:@"onReady"];
+            onReady(playerId);
+          }
+        } else if ([[player currentItem] status ] == AVPlayerItemStatusFailed) {
+          [_channel_audioplayer invokeMethod:@"audio.onError" arguments:@{@"playerId": playerId, @"value": @"AVPlayerItemStatus.failed"}];
+        }
   } else {
     // Any unrecognized context must belong to super
     [super observeValueForKeyPath:keyPath
