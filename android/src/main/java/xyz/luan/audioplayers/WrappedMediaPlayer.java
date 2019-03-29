@@ -9,7 +9,8 @@ import java.io.IOException;
 
 public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnBufferingUpdateListener {
+        MediaPlayer.OnBufferingUpdateListener,
+        MediaPlayer.OnErrorListener{
 
     private String playerId;
 
@@ -212,6 +213,12 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
         ref.hanldeBufferingUpdate(this, progress);
     }
 
+    @Override
+    public boolean onError(final MediaPlayer mediaPlayer, int err1, int err2) {
+        ref.handleOnError(this, err1);
+        return true;
+    }
+
     /**
      * Internal logic. Private methods
      */
@@ -221,6 +228,7 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(this);
         player.setOnBufferingUpdateListener(this);
+        player.setOnErrorListener(this);
         setAttributes(player);
         player.setVolume((float) volume, (float) volume);
         player.setLooping(this.releaseMode == ReleaseMode.LOOP);
