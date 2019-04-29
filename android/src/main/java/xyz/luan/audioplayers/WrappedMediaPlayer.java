@@ -23,7 +23,7 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
     private boolean prepared = false;
     private boolean playing = false;
 
-    private double shouldSeekTo = -1;
+    private int shouldSeekTo = -1;
 
     private MediaPlayer player;
     private AudioplayersPlugin ref;
@@ -176,9 +176,9 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
     // seek operations cannot be called until after
     // the player is ready.
     @Override
-    void seek(double position) {
+    void seek(int position) {
         if (this.prepared)
-            this.player.seekTo((int) (position * 1000));
+            this.player.seekTo(position);
         else
             this.shouldSeekTo = position;
     }
@@ -195,7 +195,7 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
             ref.handleIsPlaying(this);
         }
         if (this.shouldSeekTo >= 0) {
-            this.player.seekTo((int) (this.shouldSeekTo * 1000));
+            this.player.seekTo(this.shouldSeekTo);
             this.shouldSeekTo = -1;
         }
     }
