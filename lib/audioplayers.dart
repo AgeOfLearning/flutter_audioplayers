@@ -94,9 +94,7 @@ class AudioPlayer {
 
   void set state(AudioPlayerState state) {
     _playerStateController.add(state);
-    if (audioPlayerStateChangeHandler != null) {
-      audioPlayerStateChangeHandler(state);
-    }
+    audioPlayerStateChangeHandler?.call(state);
     _audioPlayerState = state;
   }
 
@@ -172,12 +170,12 @@ class AudioPlayer {
     Duration position: null, // Must be null by default to be compatible with radio streams
     bool respectSilence: false,
   }) async {
-    final double positionInSeconds = position == null ? null : position.inSeconds.toDouble();
+    final int positionInMilliseconds = position?.inMilliseconds;
     int result = await _invokeMethod('play', {
       'url': url,
       'isLocal': isLocal,
       'volume': volume,
-      'position': positionInSeconds,
+      'position': positionInMilliseconds,
       'respectSilence': respectSilence,
     });
 
@@ -228,8 +226,7 @@ class AudioPlayer {
 
   /// Move the cursor to the desired position.
   Future<int> seek(Duration position) {
-    double positionInSeconds = position.inMicroseconds / Duration.microsecondsPerSecond;
-    return _invokeMethod('seek', {'position': positionInSeconds});
+    return _invokeMethod('seek', {'position': position.inMilliseconds});
   }
 
   /// Sets the volume (ampliutde). 0.0 is mute and 1.0 is max, the rest is linear interpolation.
@@ -268,36 +265,26 @@ class AudioPlayer {
       case 'audio.onDuration':
         Duration newDuration = new Duration(milliseconds: value);
         player._durationController.add(newDuration);
-        if (player.durationHandler != null) {
-          player.durationHandler(newDuration);
-        }
+        player.durationHandler?.call(newDuration);
         break;
       case 'audio.onCurrentPosition':
         Duration newDuration = new Duration(milliseconds: value);
         player._positionController.add(newDuration);
-        if (player.positionHandler != null) {
-          player.positionHandler(newDuration);
-        }
+        player.positionHandler?.call(newDuration);
         break;
       case 'audio.onBufferingUpdate':
         player._bufferingController.add(value);
-        if (player.bufferingHandler != null) {
-          player.bufferingHandler(value);
-        }
+        player.bufferingHandler?.call;
         break;
       case 'audio.onComplete':
         player.state = AudioPlayerState.COMPLETED;
         player._completionController.add(null);
-        if (player.completionHandler != null) {
-          player.completionHandler();
-        }
+        player.completionHandler?.call();
         break;
       case 'audio.onError':
         player.state = AudioPlayerState.STOPPED;
         player._errorController.add(value);
-        if (player.errorHandler != null) {
-          player.errorHandler(value);
-        }
+        player.errorHandler?.call(value);
         break;
       default:
         _log('Unknowm method ${call.method} ');

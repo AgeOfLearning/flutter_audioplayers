@@ -66,12 +66,13 @@ FlutterMethodChannel *_channel_audioplayer;
                         result(0);
                     int isLocal = [call.arguments[@"isLocal"]intValue] ;
                     float volume = (float)[call.arguments[@"volume"] doubleValue] ;
-                    double seconds = call.arguments[@"position"] == [NSNull null] ? 0.0 : [call.arguments[@"position"] doubleValue] ;
+                    int milliseconds = call.arguments[@"position"] == [NSNull null] ? 0.0 : [call.arguments[@"position"] intValue] ;
                     bool respectSilence = [call.arguments[@"respectSilence"]boolValue] ;
-                    CMTime time = CMTimeMakeWithSeconds(seconds,1);
+                    CMTime time = CMTimeMakeWithSeconds(milliseconds / 1000.0,NSEC_PER_SEC);
                     NSLog(@"isLocal: %d %@", isLocal, call.arguments[@"isLocal"] );
-                    NSLog(@"volume: %f %@", volume, call.arguments[@"volume"] );
-                    NSLog(@"position: %f %@", seconds, call.arguments[@"positions"] );
+                    //NSLog(@"volume: %f %@", volume, call.arguments[@"volume"] );
+                    NSLog(@"position: %i %@", milliseconds, call.arguments[@"positions"] );
+                    NSLog(@"CMTimeGetSeconds: %f", CMTimeGetSeconds(time));
                     [self play:playerId url:url isLocal:isLocal volume:volume time:time isNotification:respectSilence];
                   },
                 @"pause":
@@ -100,9 +101,9 @@ FlutterMethodChannel *_channel_audioplayer;
                     if (!call.arguments[@"position"]) {
                       result(0);
                     } else {
-                      double seconds = [call.arguments[@"position"] doubleValue];
-                      NSLog(@"Seeking to: %f seconds", seconds);
-                      [self seek:playerId time:CMTimeMakeWithSeconds(seconds,1)];
+                      int milliseconds = [call.arguments[@"position"] intValue];
+                      NSLog(@"Seeking to: %i milliseconds", milliseconds);
+                      [self seek:playerId time:CMTimeMakeWithSeconds(milliseconds / 1000.0,NSEC_PER_SEC)];
                     }
                   },
                 @"setUrl":
@@ -110,13 +111,13 @@ FlutterMethodChannel *_channel_audioplayer;
                     NSLog(@"setUrl");
                     NSString *url = call.arguments[@"url"];
                     int isLocal = [call.arguments[@"isLocal"]intValue];
-                    [ self setUrl:url 
-                          isLocal:isLocal 
-                          playerId:playerId 
+                    [ self setUrl:url
+                          isLocal:isLocal
+                          playerId:playerId
                           onReady:^(NSString * playerId) {
                             result(@(1));
-                          }         
-                    ];                    
+                          }
+                    ];
                   },
                 @"setVolume":
                   ^{
