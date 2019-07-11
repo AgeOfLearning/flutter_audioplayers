@@ -222,6 +222,10 @@ FlutterMethodChannel *_channel_audioplayer;
   } else {
     if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
       onReady(playerId);
+    } else {
+      // the new onReady to be called when the player is ready
+      // otherwise play command will be ignored
+      [playerInfo setObject:onReady forKey:@"onReady"];
     }
   }
 }
