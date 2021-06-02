@@ -161,7 +161,7 @@ FlutterMethodChannel *_channel_audioplayer;
   AVPlayer *player = playerInfo[@"player"];
   NSMutableSet *observers = playerInfo[@"observers"];
   AVPlayerItem *playerItem;
-    
+
   NSLog(@"setUrl %@", url);
 
   if (!playerInfo || ![url isEqualToString:playerInfo[@"url"]]) {
@@ -170,7 +170,7 @@ FlutterMethodChannel *_channel_audioplayer;
     } else {
       playerItem = [ [ AVPlayerItem alloc ] initWithURL:[ NSURL URLWithString:url ]];
     }
-      
+
     if (playerInfo[@"url"]) {
       [[player currentItem] removeObserver:self forKeyPath:@"player.currentItem.status" ];
 
@@ -199,7 +199,7 @@ FlutterMethodChannel *_channel_audioplayer;
       }];
         [timeobservers addObject:@{@"player":player, @"observer":timeObserver}];
     }
-      
+
     id anobserver = [[ NSNotificationCenter defaultCenter ] addObserverForName: AVPlayerItemDidPlayToEndTimeNotification
                                                                         object: playerItem
                                                                          queue: nil
@@ -207,7 +207,7 @@ FlutterMethodChannel *_channel_audioplayer;
                                                                         [self onSoundComplete:playerId];
                                                                     }];
     [observers addObject:anobserver];
-      
+
     // is sound ready
     [playerInfo setObject:onReady forKey:@"onReady"];
     [playerItem addObserver:self
@@ -218,7 +218,7 @@ FlutterMethodChannel *_channel_audioplayer;
                    forKeyPath:@"loadedTimeRanges"
                       options:NSKeyValueObservingOptionNew
                       context:(void*)playerId];
-      
+
   } else {
     if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
       onReady(playerId);
@@ -252,9 +252,9 @@ FlutterMethodChannel *_channel_audioplayer;
   }
   [[AVAudioSession sharedInstance] setActive:YES error:&error];
 
-  [ self setUrl:url 
-         isLocal:isLocal 
-         playerId:playerId 
+  [ self setUrl:url
+         isLocal:isLocal
+         playerId:playerId
          onReady:^(NSString * playerId) {
            NSMutableDictionary * playerInfo = players[playerId];
            AVPlayer *player = playerInfo[@"player"];
@@ -262,7 +262,7 @@ FlutterMethodChannel *_channel_audioplayer;
            [ player seekToTime:time ];
            [ player play];
            [ playerInfo setObject:@true forKey:@"isPlaying" ];
-         }    
+         }
   ];
 }
 
@@ -285,9 +285,9 @@ FlutterMethodChannel *_channel_audioplayer;
 {
     NSMutableDictionary * playerInfo = players[playerId];
     AVPlayer *player = playerInfo[@"player"];
-    
-    
-    
+
+
+
     CMTime duration = [[[player currentItem]  asset] duration];
     int progress = roundf((CMTimeGetSeconds(timeRange.duration) / CMTimeGetSeconds(duration) * 100));
     NSLog(@"iod -> buffering %d", progress);
@@ -320,7 +320,7 @@ FlutterMethodChannel *_channel_audioplayer;
   [playerInfo setObject:@true forKey:@"isPlaying"];
 }
 
--(void) setVolume: (float) volume 
+-(void) setVolume: (float) volume
         playerId:  (NSString *) playerId {
   NSMutableDictionary *playerInfo = players[playerId];
   AVPlayer *player = playerInfo[@"player"];
@@ -373,7 +373,7 @@ FlutterMethodChannel *_channel_audioplayer;
                      ofObject:(id)object
                        change:(NSDictionary *)change
                       context:(void *)context {
-    
+
     //buffering
     if([keyPath isEqualToString:@"loadedTimeRanges"]){
         NSString *playerId = (__bridge NSString*)context;
@@ -382,7 +382,7 @@ FlutterMethodChannel *_channel_audioplayer;
             CMTimeRange timerange=[[timeRanges objectAtIndex:0]CMTimeRangeValue];
             [self updateBuffering:playerId timeRange:timerange];
         }
-        
+
     }
     else if ([keyPath isEqualToString: @"player.currentItem.status"]) {
         NSString *playerId = (__bridge NSString*)context;

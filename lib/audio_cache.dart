@@ -9,7 +9,7 @@ import 'audioplayers.dart';
 
 /// This class represents a cache for Local Assets to be played.
 ///
-/// Flutter can only play audios on device folders, so this first copies files to a temporary folder and the plays then.
+/// Flutter can only play audios on device folders, so first this class copies the files to a temporary folder, and then plays them.
 /// You can pre-cache your audio, or clear the cache, as desired.
 class AudioCache {
   /// A reference to the loaded files.
@@ -29,24 +29,24 @@ class AudioCache {
 
   /// This flag should be set to true, if player is used for playing internal notifications
   ///
-  /// This flag will have influence of stream type. And will respect silent mode if set to true
+  /// This flag will have influence of stream type, and will respect silent mode if set to true
   bool respectSilence;
 
   AudioCache({this.prefix = "", this.fixedPlayer, this.respectSilence = false});
 
-  /// Clear the cache of the file [fileName].
+  /// Clears the cache of the file [fileName].
   ///
-  /// Does nothing if there was already no cache.
+  /// Does nothing if the file was not on cache.
   void clear(String fileName) {
     loadedFiles.remove(fileName);
   }
 
-  /// Clear the whole cache.
+  /// Clears the whole cache.
   void clearCache() {
     loadedFiles.clear();
   }
 
-  /// Disable [AudioPlayer] logs (enable only if debugging, otherwise they can be quite overwhelming).
+  /// Disables [AudioPlayer] logs (enable only if debugging, otherwise they can be quite overwhelming).
   ///
   /// TODO: there are still some logs on the android native side that we could not get rid of, if you'd like to help, please send us a PR!
   void disableLog() {
@@ -60,19 +60,20 @@ class AudioCache {
   Future<File> fetchToMemory(String fileName) async {
     final file = new File('${(await getTemporaryDirectory()).path}/$fileName');
     await file.create(recursive: true);
-    return await file.writeAsBytes((await _fetchAsset(fileName)).buffer.asUint8List());
+    return await file
+        .writeAsBytes((await _fetchAsset(fileName)).buffer.asUint8List());
   }
 
-  /// Load all the [fileNames] provided to the cache.
+  /// Loads all the [fileNames] provided to the cache.
   ///
-  /// Also retruns a list of [Future]s for those files.
+  /// Also returns a list of [Future]s for those files.
   Future<List<File>> loadAll(List<String> fileNames) async {
     return Future.wait(fileNames.map(load));
   }
 
-  /// Load a single [fileName] to the cache.
+  /// Loads a single [fileName] to the cache.
   ///
-  /// Also retruns a [Future] to access that file.
+  /// Also returns a [Future] to access that file.
   Future<File> load(String fileName) async {
     if (!loadedFiles.containsKey(fileName)) {
       loadedFiles[fileName] = await fetchToMemory(fileName);
@@ -86,10 +87,13 @@ class AudioCache {
 
   /// Plays the given [fileName].
   ///
-  /// If the file is already cached, it plays imediatelly. Otherwise, first waits for the file to load (might take a few milliseconds).
+  /// If the file is already cached, it plays immediately. Otherwise, first waits for the file to load (might take a few milliseconds).
   /// It creates a new instance of [AudioPlayer], so it does not affect other audios playing (unless you specify a [fixedPlayer], in which case it always use the same).
   /// The instance is returned, to allow later access (either way), like pausing and resuming.
-  Future<AudioPlayer> play(String fileName, {double volume = 1.0, bool isNotification, PlayerMode mode = PlayerMode.MEDIA_PLAYER}) async {
+  Future<AudioPlayer> play(String fileName,
+      {double volume = 1.0,
+      bool isNotification,
+      PlayerMode mode = PlayerMode.MEDIA_PLAYER}) async {
     File file = await load(fileName);
     AudioPlayer player = _player(mode);
     await player.play(
@@ -104,7 +108,10 @@ class AudioCache {
   /// Like [play], but loops the audio (starts over once finished).
   ///
   /// The instance of [AudioPlayer] created is returned, so you can use it to stop the playback as desired.
-  Future<AudioPlayer> loop(String fileName, {double volume = 1.0, bool isNotification, PlayerMode mode = PlayerMode.MEDIA_PLAYER}) async {
+  Future<AudioPlayer> loop(String fileName,
+      {double volume = 1.0,
+      bool isNotification,
+      PlayerMode mode = PlayerMode.MEDIA_PLAYER}) async {
     File file = await load(fileName);
     AudioPlayer player = _player(mode);
     player.setReleaseMode(ReleaseMode.LOOP);

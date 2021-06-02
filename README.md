@@ -10,7 +10,7 @@ This was orginally forked from [rxlabz's audioplayer](https://github.com/rxlabz/
 
 ```yaml
 dependencies:
-  audioplayers: ^0.10.0
+  audioplayers: ^0.11.0
 ```
 
 ## Discord channel
@@ -159,9 +159,20 @@ This event returns the duration of the file, when it's available (it might take 
 This Event updates the current position of the audio. You can use it to make a progress bar, for instance.
 
 ```dart
-  player.onPositionChanged.listen((Duration  p) => {
-    print('Current position: $d');
-    setState(() => duration = d);
+  player.onAudioPositionChanged.listen((Duration  p) => {
+    print('Current position: $p');
+    setState(() => position = p);
+  });
+```
+
+#### State Event
+
+This Event returns the current player state. You can use it to show if player playing, or stopped, or paused.
+
+```dart
+  player.onPlayerStateChanged.listen((AudioPlayerState s) => {
+    print('Current player state: $s');
+    setState(() => palyerState = s);
   });
 ```
 

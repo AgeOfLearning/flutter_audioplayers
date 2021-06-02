@@ -11,8 +11,8 @@ import 'player_widget.dart';
 
 typedef void OnError(Exception exception);
 
-const kUrl1 = 'http://www.rxlabz.com/labz/audio.mp3';
-const kUrl2 = 'http://www.rxlabz.com/labz/audio2.mp3';
+const kUrl1 = 'https://luan.xyz/files/audio/ambient_c_motion.mp3';
+const kUrl2 = 'https://luan.xyz/files/audio/nasa_on_a_mission.mp3';
 const kUrl3 = 'http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio1xtra_mf_p';
 
 void main() {
@@ -108,15 +108,19 @@ class _ExampleAppState extends State<ExampleApp> {
       Text('Play Local Asset \'audio2.mp3\':'),
       _btn('Play', () => audioCache.play('audio2.mp3')),
       Text('Play Local Asset In Low Latency \'audio.mp3\':'),
-      _btn('Play', () => audioCache.play('audio.mp3', mode: PlayerMode.LOW_LATENCY)),
-
+      _btn('Play',
+          () => audioCache.play('audio.mp3', mode: PlayerMode.LOW_LATENCY)),
+      Text('Play Local Asset In Low Latency \'audio2.mp3\':'),
+      _btn('Play',
+          () => audioCache.play('audio2.mp3', mode: PlayerMode.LOW_LATENCY)),
     ]);
   }
 
   Widget notification() {
     return _tab([
       Text('Play notification sound: \'messenger.mp3\':'),
-      _btn('Play', () => audioCache.play('messenger.mp3', isNotification: true)),
+      _btn(
+          'Play', () => audioCache.play('messenger.mp3', isNotification: true)),
     ]);
   }
 
@@ -157,6 +161,15 @@ class _ExampleAppState extends State<ExampleApp> {
           _btn('release', () => advancedPlayer.release()),
         ], mainAxisAlignment: MainAxisAlignment.spaceEvenly),
       ]),
+      new Column(children: [
+        Text('Seek in milliseconds'),
+        Row(children: [
+          _btn('100ms', () => advancedPlayer.seek(Duration(milliseconds: 100))),
+          _btn('500ms', () => advancedPlayer.seek(Duration(milliseconds: 500))),
+          _btn('1s', () => advancedPlayer.seek(Duration(seconds: 1))),
+          _btn('1.5s', () => advancedPlayer.seek(Duration(milliseconds: 1500))),
+        ], mainAxisAlignment: MainAxisAlignment.spaceEvenly),
+      ]),
     ]);
   }
 
@@ -178,7 +191,13 @@ class _ExampleAppState extends State<ExampleApp> {
           title: Text('audioplayers Example'),
         ),
         body: TabBarView(
-          children: [remoteUrl(), localFile(), localAsset(), notification(), advanced()],
+          children: [
+            remoteUrl(),
+            localFile(),
+            localAsset(),
+            notification(),
+            advanced()
+          ],
         ),
       ),
     );

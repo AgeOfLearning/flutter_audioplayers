@@ -39,7 +39,7 @@ enum AudioPlayerState {
 }
 
 // This enum contains the options for the player mode.
-// Right now, both modes have the same implementation backend on iOS.
+// Right now, both modes have the same backend implementation on iOS.
 enum PlayerMode {
   // Use this mode for long media files or streams.
   MEDIA_PLAYER,
@@ -53,14 +53,14 @@ enum PlayerMode {
 ///
 /// It features methods to play, loop, pause, stop, seek the audio, and some useful hooks for handlers and callbacks.
 class AudioPlayer {
-  static final MethodChannel _channel = const MethodChannel('xyz.luan/audioplayers')
-    ..setMethodCallHandler(platformCallHandler);
+  static final MethodChannel _channel =
+      const MethodChannel('xyz.luan/audioplayers')
+        ..setMethodCallHandler(platformCallHandler);
 
   static final _uuid = new Uuid();
 
   final StreamController<AudioPlayerState> _playerStateController =
       new StreamController.broadcast();
-
 
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
@@ -72,10 +72,8 @@ class AudioPlayer {
   final StreamController<Duration> _durationController =
       new StreamController.broadcast();
 
-
   final StreamController<void> _completionController =
       new StreamController.broadcast();
-
 
   final StreamController<String> _errorController =
       new StreamController.broadcast();
@@ -92,9 +90,10 @@ class AudioPlayer {
 
   AudioPlayerState get state => _audioPlayerState;
 
-  void set state(AudioPlayerState state) {
+  set state(AudioPlayerState state) {
     _playerStateController.add(state);
-    audioPlayerStateChangeHandler?.call(state);
+    audioPlayerStateChangeHandler // ignore: deprecated_member_use_from_same_package
+        ?.call(state);
     _audioPlayerState = state;
   }
 
@@ -119,6 +118,7 @@ class AudioPlayer {
   TimeChangeHandler durationHandler;
 
   @deprecated
+
   /// This handler updates the current position of the audio. You can use it to make a progress bar, for instance.
   TimeChangeHandler positionHandler;
 
@@ -155,19 +155,23 @@ class AudioPlayer {
     players[playerId] = this;
   }
 
-  Future<int> _invokeMethod(String method, [Map<String, dynamic> arguments = const {}]) {
+  Future<int> _invokeMethod(String method,
+      [Map<String, dynamic> arguments = const {}]) {
     Map<String, dynamic> withPlayerId = Map.of(arguments);
     withPlayerId['playerId'] = playerId;
     withPlayerId['mode'] = mode.toString();
-    return _channel.invokeMethod(method, withPlayerId).then((result) => (result as int));
+    return _channel
+        .invokeMethod(method, withPlayerId)
+        .then((result) => (result as int));
   }
 
-  /// Play audio. Url can be a remote url (isLocal = false) or a local file system path (isLocal = true).
+  /// Plays audio. Url can be a remote url (isLocal = false) or a local file system path (isLocal = true).
   Future<int> play(
     String url, {
     bool isLocal: false,
     double volume: 1.0,
-    Duration position: null, // Must be null by default to be compatible with radio streams
+    Duration position:
+        null, // Must be null by default to be compatible with radio streams
     bool respectSilence: false,
   }) async {
     final int positionInMilliseconds = position?.inMilliseconds;
@@ -186,7 +190,7 @@ class AudioPlayer {
     return result;
   }
 
-  /// Pause the currently playing audio (resumes from this point).
+  /// Pauses the currently playing audio (resumes from this point).
   Future<int> pause() async {
     int result = await _invokeMethod('pause');
     if (result == 1) {
@@ -195,7 +199,7 @@ class AudioPlayer {
     return result;
   }
 
-  /// Stop the currently playing audio (resumes from the beginning).
+  /// Stops the currently playing audio (resumes from the beginning).
   Future<int> stop() async {
     int result = await _invokeMethod('stop');
     if (result == 1) {
@@ -213,7 +217,7 @@ class AudioPlayer {
     return result;
   }
 
-  /// Release the resources associated with this media player.
+  /// Releases the resources associated with this media player.
   ///
   /// It will be prepared again if needed.
   Future<int> release() async {
@@ -224,12 +228,12 @@ class AudioPlayer {
     return result;
   }
 
-  /// Move the cursor to the desired position.
+  /// Moves the cursor to the desired position.
   Future<int> seek(Duration position) {
     return _invokeMethod('seek', {'position': position.inMilliseconds});
   }
 
-  /// Sets the volume (ampliutde). 0.0 is mute and 1.0 is max, the rest is linear interpolation.
+  /// Sets the volume (amplitude). 0.0 is mute and 1.0 is max, the rest is linear interpolation.
   Future<int> setVolume(double volume) {
     return _invokeMethod('setVolume', {'volume': volume});
   }
@@ -240,7 +244,8 @@ class AudioPlayer {
   /// RELEASE mode is the default, it releases all resources on Android (like calling release method). On iOS there is no such concept.
   /// LOOP will start playing again forever, without releasing.
   Future<int> setReleaseMode(ReleaseMode releaseMode) {
-    return _invokeMethod('setReleaseMode', {'releaseMode': releaseMode.toString()});
+    return _invokeMethod(
+        'setReleaseMode', {'releaseMode': releaseMode.toString()});
   }
 
   /// Changes the url (source), without resuming playback (like play would do).
@@ -258,36 +263,45 @@ class AudioPlayer {
 
   static Future<void> platformCallHandler(MethodCall call) async {
     _log('_platformCallHandler call ${call.method} ${call.arguments}');
-    String playerId = (call.arguments as Map)['playerId'];
+    String playerId = (call.arguments as Map)['playerId'] as String;
     AudioPlayer player = players[playerId];
     dynamic value = (call.arguments as Map)['value'];
     switch (call.method) {
       case 'audio.onDuration':
         Duration newDuration = new Duration(milliseconds: value);
         player._durationController.add(newDuration);
-        player.durationHandler?.call(newDuration);
+        player
+            .durationHandler // ignore: deprecated_member_use_from_same_package
+            ?.call(newDuration);
         break;
       case 'audio.onCurrentPosition':
         Duration newDuration = new Duration(milliseconds: value);
         player._positionController.add(newDuration);
-        player.positionHandler?.call(newDuration);
+        player
+          .positionHandler // ignore: deprecated_member_use_from_same_package
+          ?.call(newDuration);
         break;
       case 'audio.onBufferingUpdate':
         player._bufferingController.add(value);
-        player.bufferingHandler?.call;
+        player
+          .bufferingHandler // ignore: deprecated_member_use_from_same_package
+          ?.call;
         break;
       case 'audio.onComplete':
         player.state = AudioPlayerState.COMPLETED;
         player._completionController.add(null);
-        player.completionHandler?.call();
+        player
+            .completionHandler // ignore: deprecated_member_use_from_same_package
+            ?.call();
         break;
       case 'audio.onError':
         player.state = AudioPlayerState.STOPPED;
         player._errorController.add(value);
-        player.errorHandler?.call(value);
+        player.errorHandler // ignore: deprecated_member_use_from_same_package
+            ?.call(value);
         break;
       default:
-        _log('Unknowm method ${call.method} ');
+        _log('Unknown method ${call.method} ');
     }
   }
 }
